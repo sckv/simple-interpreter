@@ -140,12 +140,13 @@ Output for input consisting entirely of whitespace will be an empty string (null
 All other cases will throw an error.
 
 -- In Haskell that is:
-Right (Nothing, Interpreter)
-Right (Just Double, Interpreter)
-Right (Nothing, Interpreter)
-Left String
-Language
-Grammar
+- Right (Nothing, Interpreter)
+- Right (Just Double, Interpreter)
+- Right (Nothing, Interpreter)
+- Left String
+- Language
+- Grammar
+
 This section specifies the grammar for the interpreter language in EBNF syntax
 
 function ::= fn-keyword fn-name { identifier } fn-operator expression
