@@ -166,8 +166,10 @@ identifier-char ::= '_' | letter | digit
 number ::= { digit } [ '.' digit { digit } ]
 
 letter ::= 'a' | 'b' | ... | 'y' | 'z' | 'A' | 'B' | ... | 'Y' | 'Z'
+
 digit ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
-Operator Precedence
+
+## Operator Precedence
 The following table lists the language's operators grouped in order of precedence. Operators within each group have equal precedence.
 
 Category Operators
