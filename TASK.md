@@ -154,27 +154,25 @@ fn-name ::= identifier <br />
 fn-operator ::= '=>' <br />
 fn-keyword ::= 'fn' <br />
 
-expression ::= factor | expression operator expression
-factor ::= number | identifier | assignment | '(' expression ')' | function-call
-assignment ::= identifier '=' expression
+expression ::= factor | expression operator expression <br />
+factor ::= number | identifier | assignment | '(' expression ')' | function-call <br />
+assignment ::= identifier '=' expression <br />
 function-call ::= fn-name { expression }
 
 operator ::= '+' | '-' | '\*' | '/' | '%'
 
-identifier ::= letter | '_' { identifier-char }
+identifier ::= letter | '_' { identifier-char } <br />
 identifier-char ::= '_' | letter | digit
 
-number ::= { digit } [ '.' digit { digit } ]
-
-letter ::= 'a' | 'b' | ... | 'y' | 'z' | 'A' | 'B' | ... | 'Y' | 'Z'
-
+number ::= { digit } [ '.' digit { digit } ] <br />
+letter ::= 'a' | 'b' | ... | 'y' | 'z' | 'A' | 'B' | ... | 'Y' | 'Z' <br />
 digit ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 
 ## Operator Precedence
 The following table lists the language's operators grouped in order of precedence. Operators within each group have equal precedence.
 
-Category Operators
-Multiplicative \*, /, %
-Additive +, -
-Assignment =
-Function =>
+Category Operators <br />
+Multiplicative \*, /, % <br />
+Additive +, - <br />
+Assignment = <br />
+Function => <br />
