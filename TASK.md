@@ -149,10 +149,10 @@ All other cases will throw an error.
 
 This section specifies the grammar for the interpreter language in EBNF syntax
 
-function ::= fn-keyword fn-name { identifier } fn-operator expression \n
-fn-name ::= identifier \n
-fn-operator ::= '=>' \n
-fn-keyword ::= 'fn' \n
+function ::= fn-keyword fn-name { identifier } fn-operator expression <br />
+fn-name ::= identifier <br />
+fn-operator ::= '=>' <br />
+fn-keyword ::= 'fn' <br />
 
 expression ::= factor | expression operator expression
 factor ::= number | identifier | assignment | '(' expression ')' | function-call
