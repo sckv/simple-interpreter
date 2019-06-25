@@ -29,7 +29,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "strictBindCallApply": true,
-    "typeRoots": ["*/**/node_modules/**/*"],
     "module": "esnext",
     "outDir": "build",
     "baseUrl": "./src",

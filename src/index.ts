@@ -1,12 +1,15 @@
+import { randomBytes } from 'crypto';
+
 const Symbol_ASSIGNMENT = Symbol('assignment');
 const Symbol_O_SUM = Symbol('sum');
 const Symbol_O_MUL = Symbol('multiply');
 const Symbol_O_REST = Symbol('minus');
 const Symbol_O_DIV = Symbol('divide');
 const Symbol_O_PERCENT = Symbol('percent');
+// const Symbol_O_FUNCTION = Symbol('function');
 
-const Symbol_O_PREF_O = Symbol('< left_parenthesis ( >'); // ?
-const Symbol_O_PREF_C = Symbol('< right_parenthesis ) >'); // ?
+const Symbol_O_PREF_O = Symbol('left_parenthesis (-'); // ?
+const Symbol_O_PREF_C = Symbol('right_parenthesis )-'); // ?
 
 const Symbol_O_NUMBER = Symbol('number');
 const Symbol_O_CONST = Symbol('const');
@@ -16,10 +19,10 @@ const Operators = {
   [Symbol_O_SUM]: 2,
   [Symbol_O_REST]: 2,
   [Symbol_O_DIV]: 3,
-  [Symbol_O_MUL]: 4,
-  [Symbol_O_PERCENT]: 4,
-  [Symbol_O_PREF_O]: 5, // ?
-  [Symbol_O_PREF_C]: 5, // ?
+  [Symbol_O_MUL]: 3,
+  [Symbol_O_PERCENT]: 3,
+  [Symbol_O_PREF_O]: 4, // ?
+  [Symbol_O_PREF_C]: 4, // ?
 };
 
 const OperatorsMatcher: { [k: string]: symbol } = {
@@ -32,36 +35,6 @@ const OperatorsMatcher: { [k: string]: symbol } = {
   '(': Symbol_O_PREF_O,
   ')': Symbol_O_PREF_C,
 };
-
-class LexicalNode {
-  type: keyof typeof Operators;
-
-  forcePreference: boolean = false;
-
-  lhs: LexicalNode | number | string | null = null;
-  rhs: LexicalNode | number | string | null = null;
-
-  constructor(sym: keyof typeof Operators) {
-    this.type = sym;
-  }
-
-  static leftPreference(left: LexicalNode, right: LexicalNode) {
-    if (Operators[left.type] === Operators[right.type]) return 0;
-    // forcing preference with parenthesis
-    if (left.forcePreference && !right.forcePreference) return 1;
-    if (!left.forcePreference && right.forcePreference) return -1;
-
-    if (Operators[left.type] > Operators[right.type]) return 1;
-    if (Operators[left.type] < Operators[right.type]) return -1;
-    return 0;
-  }
-
-  static decodeChar(char: string) {
-    if (OperatorsMatcher[char]) return OperatorsMatcher[char];
-    if (!Number.isNaN(Number(char))) return Symbol_O_NUMBER;
-    return Symbol_O_CONST;
-  }
-}
 
 class Interpreter {
   private _input: string = '';
@@ -81,8 +54,55 @@ class Interpreter {
   }
 }
 
+class LexicalNode {
+  type: keyof typeof Operators;
+
+  forcePreference: boolean = false;
+
+  uuid: string;
+
+  lhs: LexicalNode | number | string | null = null;
+  rhs: LexicalNode | number | string | null = null;
+
+  constructor(sym: keyof typeof Operators) {
+    this.type = sym;
+    this.uuid = randomBytes(15).toString('hex');
+  }
+
+  static leftPreference({
+    left,
+    right,
+    trueType,
+  }: {
+    left: LexicalNode;
+    right: LexicalNode;
+    trueType?: boolean;
+  }) {
+    if (Operators[left.type] === Operators[right.type]) return 0;
+
+    if (!trueType) {
+      // forcing preference with parenthesis
+      if (left.forcePreference && !right.forcePreference) return 1;
+      if (!left.forcePreference && right.forcePreference) return -1;
+    }
+
+    if (Operators[left.type] > Operators[right.type]) return 1;
+    if (Operators[left.type] < Operators[right.type]) return -1;
+    return 0;
+  }
+
+  static decodeChar(char: string) {
+    if (OperatorsMatcher[char]) return OperatorsMatcher[char];
+    if (!Number.isNaN(Number(char))) return Symbol_O_NUMBER;
+    return Symbol_O_CONST;
+  }
+}
+
 class LexicalTree {
   input: string = '';
+
+  indirectNodes = new Map<string, LexicalNode>();
+
   constructor(input: string) {
     console.log('creating lexical tree', input);
 
@@ -101,7 +121,8 @@ class LexicalTree {
     for (let i = inputLength; i >= 0; i--) {
       const char = this.input[i];
 
-      if (char === ' ') continue;
+      if (char === ' ') continue; //exit on empty space
+
       if (i === 0 && preferenceStack)
         throw new Error(`Error in the syntaxis. \nParenthesis never opens but it has a closing symbol.\n`);
 
@@ -130,6 +151,7 @@ class LexicalTree {
         preferenceStack--;
 
         if (currentNode) currentNode.forcePreference = true;
+
         continue;
       }
 
@@ -143,36 +165,69 @@ class LexicalTree {
           charCache = null;
         } else {
           node.rhs = rootNode;
+          this.indirectNodes.set(rootNode.uuid, node);
         }
         rootNode = currentNode = node; // ? do we need an unfinished node as root?
         continue;
       }
 
-      const compareNodes = LexicalNode.leftPreference(node, currentNode);
+      const compareNodes = LexicalNode.leftPreference({ left: node, right: currentNode });
 
       if (compareNodes > 0) {
-        const saveLhs = currentNode.lhs;
-
-        node.rhs = saveLhs;
+        node.rhs = currentNode.lhs;
         currentNode.lhs = node;
-
-        rootNode = currentNode;
-
+        this.indirectNodes.set(node.uuid, currentNode);
         currentNode = node;
       } else if (compareNodes < 0) {
-        node.rhs = currentNode;
-        currentNode = node;
-        rootNode = currentNode;
-      } else {
-        const saveRhs = currentNode.rhs;
+        const biggerOrEqual = this._findNextBiggerOrEqual(node, currentNode);
+        const parentNode = this.indirectNodes.get(biggerOrEqual.uuid);
 
-        node.rhs = saveRhs;
-        currentNode.rhs = node;
+        node.rhs = biggerOrEqual;
+
+        if (!parentNode) rootNode = node;
+        else parentNode.lhs = node;
+
+        this.indirectNodes.set(biggerOrEqual.uuid, node);
+        this.indirectNodes.set(node.uuid, parentNode!);
+
+        currentNode = node;
+      } else {
+        const biggerOrEqual = this._findNextBiggerOrEqual(node, currentNode);
+        const parentNode = this.indirectNodes.get(biggerOrEqual.uuid);
+
+        node.rhs = biggerOrEqual;
+
+        if (!parentNode) rootNode = node;
+        else parentNode.lhs = node;
+
+        this.indirectNodes.set(biggerOrEqual.uuid, node);
+        this.indirectNodes.set(node.uuid, parentNode!);
+
         currentNode = node;
       }
     }
 
     return rootNode;
+  }
+
+  private _findNextBiggerOrEqual(newNode: LexicalNode, currentNode: LexicalNode): LexicalNode {
+    let exit = false;
+    let operatingNode: LexicalNode;
+
+    const trueType = LexicalNode.leftPreference({ left: newNode, right: currentNode, trueType: true });
+    if (trueType > -1) return currentNode;
+
+    while (!exit) {
+      const parent = this.indirectNodes.get(currentNode.uuid);
+      if (!parent) return currentNode;
+
+      if (LexicalNode.leftPreference({ left: newNode, right: parent }) < 0)
+        return this._findNextBiggerOrEqual(newNode, parent);
+      exit = true;
+      operatingNode = parent;
+    }
+
+    return operatingNode!;
   }
 }
 
