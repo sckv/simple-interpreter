@@ -12,7 +12,6 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'prettier/@typescript-eslint',
     'plugin:prettier/recommended',
-    'plugin:react/recommended', 
     'plugin:import/errors',
     'plugin:import/warnings',
     'plugin:import/typescript',
@@ -27,7 +26,7 @@ module.exports = {
     tsconfigRootDir: '.',
     extraFileExtensions: ['.tsx', '.ts'],
   },
-  plugins: ['prettier', 'jest', 'security', 'import'],
+  plugins: ['prettier', 'jest'],
   parserOptions: {
     ecmaVersion: 2018, // Allows for the parsing of modern ECMAScript features
     sourceType: 'module', // Allows for the use of imports
@@ -35,18 +34,10 @@ module.exports = {
   settings: {
     react: {
       version: '16.8.6', // Tells eslint-plugin-react to automatically detect the version of React to use
-    }, 
-    'import/resolver': {
-      'node': {
-        'extensions': [
-          '.ts',
-          '.tsx'   
-        ]
-      }
     },
     'import/parsers': {
-      '@typescript-eslint/parser': [ '.ts', '.tsx']
-    }
+      '@typescript-eslint/parser': ['.ts', '.tsx'],
+    },
   },
   rules: {
     '@typescript-eslint/generic-type-naming': 'off',
@@ -88,19 +79,5 @@ module.exports = {
       },
     ],
     'no-eval': 2,
-    // IMPORT
-    'typescript': {
-      'directory': '.'
-    },
-    'import/named': 2,
-    'import/namespace': 2,
-    'import/default': 2,
-    'import/export': 2,
-    'import/no-unresolved': 0,
-    'import/order': ['error', {
-      'newlines-between': 'always',
-      'groups': ['external', 'internal', 'index', 'sibling', 'parent',  'builtin']
-    }
-    ],
   },
 };
