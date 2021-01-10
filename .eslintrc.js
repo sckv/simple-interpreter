@@ -1,15 +1,11 @@
 module.exports = {
   env: {
-    es6: true,
     node: true,
     jest: true,
-    mongo: true,
     worker: true,
-    browser: true,
     'jest/globals': true,
   },
   extends: [
-    'plugin:@typescript-eslint/recommended',
     'prettier/@typescript-eslint',
     'plugin:prettier/recommended',
     'plugin:import/errors',
@@ -18,13 +14,9 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser', // Specifies the ESLint parser
   parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-    useJSXTextNode: true,
     project: './tsconfig.json',
     tsconfigRootDir: '.',
-    extraFileExtensions: ['.tsx', '.ts'],
+    extraFileExtensions: ['.ts'],
   },
   plugins: ['prettier', 'jest'],
   parserOptions: {
@@ -32,21 +24,13 @@ module.exports = {
     sourceType: 'module', // Allows for the use of imports
   },
   settings: {
-    react: {
-      version: '16.8.6', // Tells eslint-plugin-react to automatically detect the version of React to use
-    },
     'import/parsers': {
-      '@typescript-eslint/parser': ['.ts', '.tsx'],
+      '@typescript-eslint/parser': ['.ts'],
     },
   },
   rules: {
     '@typescript-eslint/generic-type-naming': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
-    'jest/no-disabled-tests': 'warn',
-    'jest/no-focused-tests': 'error',
-    'jest/no-identical-title': 'error',
-    'jest/prefer-to-have-length': 'warn',
-    'jest/valid-expect': 'error',
     'prettier/prettier': 'error',
     'no-unused-vars': 'warn',
     'no-console': 'off',

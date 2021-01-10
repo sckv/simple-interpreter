@@ -1,37 +1,45 @@
 import util from 'util';
-// import { logAll } from '@index';
+import { createNewObject } from './tools';
 
 type NodeSide = 'left' | 'right';
 
-type TreeNodeUnit<T = any> = {
-  value: NodeData | null; // UID?
-  left: T | null;
-  right: T | null;
+export type TreeNodeUnit<T = ZipperTree> = {
+  value?: NodeData; // UID?
+  left?: T;
+  right?: T;
 };
 
-type Trail = [NodeSide, NodeData /* UID? */, Ztree | null];
+export type Trail = [NodeSide, NodeData /* UID? */, ZipperTree | undefined];
 
-type TrailArray = Trail[];
+export type TrailArray = Trail[];
 
-interface Ztree extends TreeNodeUnit<Ztree> {}
+interface ZipperTree extends TreeNodeUnit<ZipperTree> {}
 
 export type NodeData<V = string | number | symbol> = {
   type: symbol;
   value?: V;
 };
 
-export class ZGraph {
+export class Zipper {
   private _trail: TrailArray;
-  private _tree: Ztree;
+  private _tree: ZipperTree;
 
-  constructor(tree: Ztree = { left: null, value: null, right: null }, trail: TrailArray = []) {
+  constructor(tree: ZipperTree = {}, trail: TrailArray = []) {
     this._tree = tree;
     this._trail = trail;
   }
 
-  toString() {
-    console.log('Tree:: \n', util.inspect(this._tree, false, null, true), '\n');
-    console.log('Trail:: \n', util.inspect(this._trail, false, null, true), '\n');
+  rebuildAndShow() {
+    let self = this as Zipper;
+    while (self.hasTop()) {
+      self = self.up()!;
+    }
+    self.toString();
+  }
+
+  toString(name?: string) {
+    console.log(`Tree ${name}:: \n`, util.inspect(this._tree, false, null, true), '\n');
+    console.log(`Trail ${name}:: \n`, util.inspect(this._trail, false, null, true), '\n');
   }
 
   toTree() {
@@ -57,58 +65,74 @@ export class ZGraph {
   left() {
     if (!this._tree.left) return null;
 
-    const trailerd = [['left', createNewObject(this._tree.value), createNewObject(this._tree.right)]].concat(
-      this._trail,
-    ) as TrailArray; // TS FAILS TO GET TYPE FROM INTERFACE Ztree
+    const trailerd = [
+      ['left', createNewObject(this._tree.value), createNewObject(this._tree.right)] as Trail,
+    ].concat(this._trail);
 
-    return new ZGraph(createNewObject(this._tree.left)!, trailerd);
+    return new Zipper(createNewObject(this._tree.left)!, trailerd);
   }
 
   right() {
     if (!this._tree.right) return null;
 
-    const trailerd = [['right', createNewObject(this._tree.value), createNewObject(this._tree.left)]].concat(
-      this._trail,
-    ) as TrailArray;
+    const trailerd = [
+      ['right', createNewObject(this._tree.value), createNewObject(this._tree.left)] as Trail,
+    ].concat(this._trail);
 
-    return new ZGraph(createNewObject(this._tree.right)!, trailerd);
+    return new Zipper(createNewObject(this._tree.right)!, trailerd);
   }
 
   up() {
     if (this._trail.length === 0) return null;
 
     const last = this._trail[0];
-    return new ZGraph(this._fromTrail(this._tree, last), this._trail.slice(1));
+    return new Zipper(this._fromTrail(this._tree, last), this._trail.slice(1));
   }
 
   setValue(value: NodeData) {
-    return new ZGraph({ value, left: this._tree.left, right: this._tree.right }, this._trail);
+    return new Zipper({ value, left: this._tree.left, right: this._tree.right }, this._trail);
   }
 
-  setLeft(value: NodeData) {
-    return new ZGraph(
-      { value: this._tree.value, left: this._newLeaf(value), right: this._tree.right },
+  setLeft(value: NodeData | Zipper) {
+    let fromZipper = null;
+    if (value instanceof Zipper) {
+      fromZipper = value.toTree();
+    }
+    return new Zipper(
+      {
+        value: this._tree.value,
+        left: fromZipper ? fromZipper : this._newLeaf(value as NodeData),
+        right: this._tree.right,
+      },
       this._trail,
     );
   }
 
-  setRight(value: NodeData) {
-    return new ZGraph(
-      { value: this._tree.value, left: this._tree.left, right: this._newLeaf(value) },
+  setRight(value: NodeData | Zipper) {
+    let fromZipper = null;
+    if (value instanceof Zipper) {
+      fromZipper = value.toTree();
+    }
+    return new Zipper(
+      {
+        value: this._tree.value,
+        left: this._tree.left,
+        right: fromZipper ? fromZipper : this._newLeaf(value as NodeData),
+      },
       this._trail,
     );
   }
 
   upsertRight(value: NodeData) {
-    return new ZGraph({ value, right: createNewObject(this._tree), left: null }, this._trail);
+    return new Zipper({ value, right: createNewObject(this._tree) }, this._trail);
   }
 
   upsertLeft(value: NodeData) {
-    return new ZGraph({ value, left: createNewObject(this._tree), right: null }, this._trail);
+    return new Zipper({ value, left: createNewObject(this._tree) }, this._trail);
   }
 
   insertRight(value: NodeData) {
-    return new ZGraph(
+    return new Zipper(
       {
         value: createNewObject(this._tree.value),
         left: createNewObject(this._tree.left),
@@ -119,7 +143,7 @@ export class ZGraph {
   }
 
   insertLeft(value: NodeData) {
-    return new ZGraph(
+    return new Zipper(
       {
         value: createNewObject(this._tree.value),
         right: createNewObject(this._tree.right),
@@ -131,22 +155,27 @@ export class ZGraph {
 
   swapFlat() {
     const { value, right, left } = this._tree;
-    return new ZGraph({ value, right: left, left: right }, this._trail);
+    return new Zipper({ value, right: left, left: right }, this._trail);
   }
 
-  private _newLeaf(value: NodeData): Ztree {
-    return this._newNode(value, null, null);
+  private _newLeaf(value: NodeData): ZipperTree {
+    return this._newNode(value);
   }
 
-  private _newNode(value: NodeData, left: Ztree | null, right: Ztree | null): Ztree {
-    return {
-      value,
-      left,
-      right,
-    };
+  private _newNode(value: NodeData, left?: ZipperTree, right?: ZipperTree): ZipperTree {
+    const obj = {} as ZipperTree;
+    if (value) Object.assign(obj, { value });
+    if (left) Object.assign(obj, { left });
+    if (right) Object.assign(obj, { right });
+    return obj;
+    // return {
+    //   value,
+    //   left,
+    //   right,
+    // };
   }
 
-  private _fromTrail(tree: Ztree, last: Trail): Ztree {
+  private _fromTrail(tree: ZipperTree, last: Trail): ZipperTree {
     if (last[0] === 'left') {
       return {
         value: last[1],
@@ -161,16 +190,10 @@ export class ZGraph {
     };
   }
 
-  private _rebuildTree(tree: Ztree, trail: TrailArray): Ztree {
+  private _rebuildTree(tree: ZipperTree, trail: TrailArray): ZipperTree {
     if (trail.length === 0) return tree;
 
     const last = trail[0];
     return this._rebuildTree(this._fromTrail(tree, last), trail.slice(1));
   }
 }
-
-const createNewObject = <T = any>(obj: T): T | null => {
-  if (obj) return Object.assign({}, obj);
-
-  return null;
-};

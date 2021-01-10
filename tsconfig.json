@@ -3,7 +3,7 @@
     "target": "es2018",
     "sourceMap": true,
     "moduleResolution": "node",
-    "lib": ["dom", "es6", "es2016", "es2017.object", "es2015.promise"],
+    "lib": ["ES2015", "ES2016", "ES2017", "ES2018", "ES2019"],
     "checkJs": false,
     "allowJs": true,
     "alwaysStrict": true,
@@ -19,7 +19,6 @@
     "pretty": true,
     "resolveJsonModule": true,
     "importHelpers": false,
-    "jsx": "react",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -29,13 +28,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "strictBindCallApply": true,
-    "module": "esnext",
-    "outDir": "build",
-    "baseUrl": "./src",
-    "rootDirs": ["src"],
-    "paths": {
-      "@*": ["./*"]
-    }
+    "module": "CommonJS",
+    "outDir": "build"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build"]

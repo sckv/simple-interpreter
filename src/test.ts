@@ -1,7 +1,7 @@
-import { Interpreter } from '@index';
-import { ZGraph } from '@zipper';
+import { Parser } from './parser';
+import { Zipper } from './zipper';
 
-const int = new Interpreter();
+const int = new Parser();
 // const input1 = 'x = 2 + 4';
 // const input2 = 'x = 2 + 4 + 3';
 const input16 = 'fn avg x y => 2 + 4 + 3';
@@ -19,7 +19,8 @@ const input16 = 'fn avg x y => 2 + 4 + 3';
 // const input10 = 'x = 6 * (7 * 1) + 5';
 // const input11 = 'x = (6 * 7) * 1 + 5';
 
-const input12 = 'x = 1 + (2 + 3) / 4';
+const input12 = `xala = 1 + (27 + 3) / 40
+waka = 4`;
 
 // const input13 = 'x = ((1 + 2) * 3 - 5) / 4'; // fail
 
